@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panini Cards - Sélecteur de Cartes</title>
+    <title>FWC 26 Album - Suivi de collection</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -11,8 +11,8 @@
 <body>
     <header>
         <div class="container">
-            <h1 class="site-title">Panini Cards</h1>
-            <p class="site-subtitle">Suivez votre collection carte par carte</p>
+            <h1 class="site-title">FWC 26 Album</h1>
+            <p class="site-subtitle">Suivez votre collection vignette par vignette</p>
             <div class="username-bar">
                 <label for="username-input">Mon pseudo :</label>
                 <input type="text" id="username-input" placeholder="Entrez votre pseudo" autocomplete="off" spellcheck="false">
@@ -139,7 +139,11 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 Panini Cards</p>
+            <div class="footer-links">
+                <a href="https://github.com/VOTRE-USERNAME/fwc26-album/issues/new" target="_blank" rel="noopener">Signaler un bug</a>
+                <a href="https://github.com/VOTRE-USERNAME/fwc26-album/discussions" target="_blank" rel="noopener">Donner mon avis</a>
+            </div>
+            <p>&copy; 2026 FWC 26 Album</p>
         </div>
     </footer>
 
@@ -213,9 +217,9 @@
         ];
 
         const CARDS_PER_COUNTRY = 20;
-        const STORAGE_KEY = "panini-selections-v2";
-        const USERNAME_KEY = "panini-username";
-        const HISTORY_KEY = "panini-import-history";
+        const STORAGE_KEY = "fwc26-selections";
+        const USERNAME_KEY = "fwc26-username";
+        const HISTORY_KEY = "fwc26-import-history";
         const STATES = ["empty", "missing", "double"];
 
         // Get card count for a country (some have custom counts)
@@ -593,7 +597,7 @@
         });
 
         // --- QR Download ---
-        const SITE_URL = "https://votre-username.github.io/panini";
+        const SITE_URL = "https://votre-username.github.io/fwc26-album";
 
         document.getElementById("btn-download-qr").addEventListener("click", () => {
             const svgEl = document.querySelector("#qr-canvas svg");
@@ -641,7 +645,7 @@
                 ctx.fillText(SITE_URL, canvasW / 2, padding + topTextHeight + qrH + bottomTextHeight - 8);
 
                 const link = document.createElement("a");
-                link.download = `panini-${username}.png`;
+                link.download = `fwc26-${username}.png`;
                 link.href = canvas.toDataURL("image/png");
                 link.click();
             };
