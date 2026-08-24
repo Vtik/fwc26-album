@@ -625,36 +625,119 @@ header {
     margin-top: 1.5rem;
     padding: 1.5rem;
     border-radius: var(--radius);
-    background: var(--color-bg);
+    background: var(--color-surface);
     border: 1px solid var(--color-border);
+    box-shadow: var(--shadow);
+}
+
+.qr-result-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.qr-result-header h3 {
+    flex: 1;
+}
+
+.qr-result-header .action-btn {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.75rem;
+}
+
+.qr-result-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-primary-light);
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 
 .qr-result h3 {
     font-size: 1.1rem;
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin: 0;
+}
+
+.trade-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
 }
 
 .trade-block {
-    margin-bottom: 1.25rem;
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+}
+
+.trade-block--give {
+    border-left: 3px solid var(--color-double);
+}
+
+.trade-block--receive {
+    border-left: 3px solid var(--color-primary);
+}
+
+.trade-block-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.trade-block-icon {
+    font-size: 1.1rem;
 }
 
 .trade-block h4 {
     font-size: 0.9rem;
     font-weight: 700;
-    margin-bottom: 0.5rem;
+    margin: 0;
     color: var(--color-text);
 }
 
-.trade-block ul {
+.trade-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 0.4rem;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-left: 0.4rem;
+}
+
+.trade-list {
     list-style: none;
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
 }
 
-.trade-block li {
-    font-size: 0.8rem;
+.trade-block--give .trade-list li {
+    font-size: 0.78rem;
+    padding: 0.3rem 0.6rem;
+    background: var(--color-double-light);
+    border-radius: 1rem;
+    color: var(--color-double-dark);
+    font-weight: 500;
+}
+
+.trade-block--receive .trade-list li {
+    font-size: 0.78rem;
     padding: 0.3rem 0.6rem;
     background: var(--color-primary-light);
     border-radius: 1rem;
@@ -666,6 +749,12 @@ header {
     font-size: 0.85rem;
     color: var(--color-text-light);
     font-style: italic;
+}
+
+@media (max-width: 600px) {
+    .trade-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 480px) {

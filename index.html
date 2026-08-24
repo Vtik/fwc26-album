@@ -114,7 +114,11 @@
                 </div>
 
                 <div class="qr-result" id="qr-result" hidden>
-                    <h3>&#x2705; Échanges possibles</h3>
+                    <div class="qr-result-header">
+                        <span class="qr-result-icon">&#x1F91D;</span>
+                        <h3>Échanges possibles</h3>
+                        <button class="action-btn" id="btn-copy-trades">&#x1F4CB; Copier</button>
+                    </div>
                     <div id="trade-summary"></div>
                 </div>
             </div>
@@ -601,25 +605,50 @@
                 }
             }
 
-            let html = "";
-            html += `<div class="trade-block"><h4>Je peux donner (${iCanGive.length})</h4>`;
+            let html = `<div class="trade-grid">`;
+
+            html += `<div class="trade-block trade-block--give">`;
+            html += `<div class="trade-block-header"><span class="trade-block-icon">&#x1F4E4;</span><h4>Je peux donner <span class="trade-count">${iCanGive.length}</span></h4></div>`;
             if (iCanGive.length) {
-                html += `<ul>${iCanGive.map(c => `<li>${c}</li>`).join("")}</ul>`;
+                html += `<ul class="trade-list">${iCanGive.map(c => `<li>${c}</li>`).join("")}</ul>`;
             } else {
                 html += `<p class="trade-empty">Aucun échange possible dans ce sens.</p>`;
             }
             html += `</div>`;
 
-            html += `<div class="trade-block"><h4>Je peux recevoir (${theyCanGive.length})</h4>`;
+            html += `<div class="trade-block trade-block--receive">`;
+            html += `<div class="trade-block-header"><span class="trade-block-icon">&#x1F4E5;</span><h4>Je peux recevoir <span class="trade-count">${theyCanGive.length}</span></h4></div>`;
             if (theyCanGive.length) {
-                html += `<ul>${theyCanGive.map(c => `<li>${c}</li>`).join("")}</ul>`;
+                html += `<ul class="trade-list">${theyCanGive.map(c => `<li>${c}</li>`).join("")}</ul>`;
             } else {
                 html += `<p class="trade-empty">Aucun échange possible dans ce sens.</p>`;
             }
+            html += `</div>`;
+
             html += `</div>`;
 
             summary.innerHTML = html;
+
+            // Store text version for copy
+            let text = "🤝 Échanges possibles\n\n";
+            text += `📤 Je peux donner (${iCanGive.length}):\n`;
+            text += iCanGive.length ? iCanGive.map(c => `  • ${c}`).join("\n") : "  Aucun";
+            text += `\n\n📥 Je peux recevoir (${theyCanGive.length}):\n`;
+            text += theyCanGive.length ? theyCanGive.map(c => `  • ${c}`).join("\n") : "  Aucun";
+            summary.dataset.textVersion = text;
         }
+
+        // --- Copy trades ---
+        document.getElementById("btn-copy-trades").addEventListener("click", () => {
+            const summary = document.getElementById("trade-summary");
+            const text = summary.dataset.textVersion;
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById("btn-copy-trades");
+                btn.textContent = "\u2705 Copié !";
+                setTimeout(() => { btn.innerHTML = "&#x1F4CB; Copier"; }, 2000);
+            });
+        });
 
         // --- Init ---
         function init() {
