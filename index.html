@@ -1,73 +1,404 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My GitHub Pages Site</title>
+    <title>Panini Cards - Sélecteur de Cartes</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <header>
-        <nav>
-            <div class="container">
-                <a href="/" class="logo">My Site</a>
-                <ul class="nav-links">
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#projects">Projects</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
-            </div>
-        </nav>
+        <div class="container">
+            <h1 class="site-title">Panini Cards</h1>
+            <p class="site-subtitle">Suivez votre collection carte par carte</p>
+        </div>
     </header>
 
     <main>
-        <section class="hero">
-            <div class="container">
-                <h1>Welcome to My Site</h1>
-                <p>This is a static site hosted on GitHub Pages.</p>
-                <a href="#about" class="btn">Learn More</a>
-            </div>
-        </section>
-
-        <section id="about" class="section">
-            <div class="container">
-                <h2>About</h2>
-                <p>This is a default GitHub Pages site ready to be customized. Edit the HTML, CSS, and content to make it your own.</p>
-            </div>
-        </section>
-
-        <section id="projects" class="section">
-            <div class="container">
-                <h2>Projects</h2>
-                <div class="grid">
-                    <div class="card">
-                        <h3>Project One</h3>
-                        <p>A brief description of your first project.</p>
+        <div class="container">
+            <!-- Global progress -->
+            <div class="global-stats">
+                <div class="stat-circle">
+                    <svg viewBox="0 0 36 36">
+                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        <path class="circle-fill" id="global-circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    </svg>
+                    <div class="stat-circle-text">
+                        <span id="global-percent">0%</span>
                     </div>
-                    <div class="card">
-                        <h3>Project Two</h3>
-                        <p>A brief description of your second project.</p>
-                    </div>
-                    <div class="card">
-                        <h3>Project Three</h3>
-                        <p>A brief description of your third project.</p>
+                </div>
+                <div class="stat-details">
+                    <span class="stat-number" id="total-count">0</span>
+                    <span class="stat-label">/ <span id="total-possible">0</span> collectées</span>
+                    <div class="stat-breakdown">
+                        <span class="stat-missing" id="global-missing">0 manquantes</span>
+                        <span class="stat-double" id="global-doubles">0 doubles</span>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <section id="contact" class="section">
-            <div class="container">
-                <h2>Contact</h2>
-                <p>Get in touch at <a href="mailto:your@email.com">your@email.com</a></p>
+            <!-- Search -->
+            <div class="search-bar">
+                <input type="text" id="country-search" placeholder="Rechercher un pays... (Ctrl+K)" autocomplete="off" spellcheck="false">
             </div>
-        </section>
+
+            <!-- Country tabs -->
+            <div class="tabs-wrapper" id="tabs-wrapper">
+                <div class="tabs-scroll">
+                    <div class="tabs" id="country-tabs" role="tablist"></div>
+                </div>
+                <button class="tabs-toggle" id="tabs-toggle" aria-label="Afficher tous les pays">&#9662; Voir tous les pays</button>
+            </div>
+
+            <!-- Active panel -->
+            <div class="panel" id="active-panel">
+                <div class="panel-header">
+                    <div class="panel-title" id="panel-title"></div>
+                    <div class="panel-meta" id="panel-meta"></div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <span class="legend-swatch legend-swatch--empty"></span>Vide
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-swatch legend-swatch--missing"></span>Manquante
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-swatch legend-swatch--double"></span>Double
+                    </div>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill progress-fill--missing" id="progress-missing"></div>
+                    <div class="progress-fill progress-fill--double" id="progress-double"></div>
+                </div>
+
+                <div class="cards-grid" id="cards-grid"></div>
+
+                <div class="panel-actions">
+                    <button class="action-btn action-btn--secondary" id="btn-reset">Réinitialiser ce pays</button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 My Site. All rights reserved.</p>
+            <p>&copy; 2026 Panini Cards</p>
         </div>
     </footer>
+
+    <script>
+        // ====== LISTE DES PAYS ======
+        const countries = [
+            { name: "France", flag: "\u{1F1EB}\u{1F1F7}" },
+            { name: "Brésil", flag: "\u{1F1E7}\u{1F1F7}" },
+            { name: "Argentine", flag: "\u{1F1E6}\u{1F1F7}" },
+            { name: "Allemagne", flag: "\u{1F1E9}\u{1F1EA}" },
+            { name: "Espagne", flag: "\u{1F1EA}\u{1F1F8}" },
+            { name: "Italie", flag: "\u{1F1EE}\u{1F1F9}" },
+            { name: "Portugal", flag: "\u{1F1F5}\u{1F1F9}" },
+            { name: "Angleterre", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}" },
+            { name: "Pays-Bas", flag: "\u{1F1F3}\u{1F1F1}" },
+            { name: "Belgique", flag: "\u{1F1E7}\u{1F1EA}" },
+            { name: "Croatie", flag: "\u{1F1ED}\u{1F1F7}" },
+            { name: "Maroc", flag: "\u{1F1F2}\u{1F1E6}" },
+            { name: "Japon", flag: "\u{1F1EF}\u{1F1F5}" },
+            { name: "Corée du Sud", flag: "\u{1F1F0}\u{1F1F7}" },
+            { name: "Australie", flag: "\u{1F1E6}\u{1F1FA}" },
+            { name: "Canada", flag: "\u{1F1E8}\u{1F1E6}" },
+            { name: "Mexique", flag: "\u{1F1F2}\u{1F1FD}" },
+            { name: "États-Unis", flag: "\u{1F1FA}\u{1F1F8}" },
+            { name: "Uruguay", flag: "\u{1F1FA}\u{1F1FE}" },
+            { name: "Colombie", flag: "\u{1F1E8}\u{1F1F4}" },
+            { name: "Chili", flag: "\u{1F1E8}\u{1F1F1}" },
+            { name: "Équateur", flag: "\u{1F1EA}\u{1F1E8}" },
+            { name: "Pérou", flag: "\u{1F1F5}\u{1F1EA}" },
+            { name: "Sénégal", flag: "\u{1F1F8}\u{1F1F3}" },
+            { name: "Ghana", flag: "\u{1F1EC}\u{1F1ED}" },
+            { name: "Cameroun", flag: "\u{1F1E8}\u{1F1F2}" },
+            { name: "Nigeria", flag: "\u{1F1F3}\u{1F1EC}" },
+            { name: "Tunisie", flag: "\u{1F1F9}\u{1F1F3}" },
+            { name: "Côte d'Ivoire", flag: "\u{1F1E8}\u{1F1EE}" },
+            { name: "Algérie", flag: "\u{1F1E9}\u{1F1FF}" },
+            { name: "Égypte", flag: "\u{1F1EA}\u{1F1EC}" },
+            { name: "Afrique du Sud", flag: "\u{1F1FF}\u{1F1E6}" },
+            { name: "Arabie Saoudite", flag: "\u{1F1F8}\u{1F1E6}" },
+            { name: "Qatar", flag: "\u{1F1F6}\u{1F1E6}" },
+            { name: "Iran", flag: "\u{1F1EE}\u{1F1F7}" },
+            { name: "Pologne", flag: "\u{1F1F5}\u{1F1F1}" },
+            { name: "Danemark", flag: "\u{1F1E9}\u{1F1F0}" },
+            { name: "Suisse", flag: "\u{1F1E8}\u{1F1ED}" },
+            { name: "Serbie", flag: "\u{1F1F7}\u{1F1F8}" },
+            { name: "Suède", flag: "\u{1F1F8}\u{1F1EA}" },
+            { name: "Norvège", flag: "\u{1F1F3}\u{1F1F4}" },
+            { name: "Autriche", flag: "\u{1F1E6}\u{1F1F9}" },
+            { name: "Turquie", flag: "\u{1F1F9}\u{1F1F7}" },
+            { name: "Grèce", flag: "\u{1F1EC}\u{1F1F7}" },
+            { name: "Écosse", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}" },
+            { name: "Pays de Galles", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}" },
+            { name: "Costa Rica", flag: "\u{1F1E8}\u{1F1F7}" },
+            { name: "Paraguay", flag: "\u{1F1F5}\u{1F1FE}" }
+        ];
+
+        const CARDS_PER_COUNTRY = 20;
+        const STORAGE_KEY = "panini-selections-v2";
+        const STATES = ["empty", "missing", "double"];
+
+        let activeIndex = 0;
+        let selections = {};
+        let filteredIndices = countries.map((_, i) => i);
+
+        // --- Storage ---
+        function load() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            selections = saved ? JSON.parse(saved) : {};
+        }
+
+        function save() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(selections));
+        }
+
+        // --- Data helpers ---
+        function getState(countryName, num) {
+            return selections[countryName]?.[num] || "empty";
+        }
+
+        function countState(countryName, state) {
+            if (!selections[countryName]) return 0;
+            return Object.values(selections[countryName]).filter(s => s === state).length;
+        }
+
+        function countCollected(countryName) {
+            return selections[countryName] ? Object.keys(selections[countryName]).length : 0;
+        }
+
+        function totalCollected() {
+            let t = 0;
+            for (const c of countries) t += countCollected(c.name);
+            return t;
+        }
+
+        // --- Global stats ---
+        function totalByState(state) {
+            let t = 0;
+            for (const c of countries) t += countState(c.name, state);
+            return t;
+        }
+
+        function updateGlobal() {
+            const missing = totalByState("missing");
+            const doubles = totalByState("double");
+            const possible = countries.length * CARDS_PER_COUNTRY;
+            // "empty" and "double" = collected. "missing" = not collected.
+            const collected = possible - missing;
+            const pct = possible > 0 ? Math.round((collected / possible) * 100) : 0;
+
+            document.getElementById("total-count").textContent = collected;
+            document.getElementById("total-possible").textContent = possible;
+            document.getElementById("global-percent").textContent = pct + "%";
+            document.getElementById("global-circle").setAttribute("stroke-dasharray", `${pct}, 100`);
+            document.getElementById("global-missing").textContent = `${missing} manquante${missing > 1 ? 's' : ''}`;
+            document.getElementById("global-doubles").textContent = `${doubles} double${doubles > 1 ? 's' : ''}`;
+        }
+
+        // --- Tabs ---
+        function renderTabs() {
+            const container = document.getElementById("country-tabs");
+            container.innerHTML = "";
+            const frag = document.createDocumentFragment();
+
+            filteredIndices.forEach(idx => {
+                const c = countries[idx];
+                const missing = countState(c.name, "missing");
+                const collected = CARDS_PER_COUNTRY - missing;
+                const btn = document.createElement("button");
+                btn.className = "tab-btn" + (idx === activeIndex ? " active" : "");
+                btn.dataset.index = idx;
+                btn.setAttribute("role", "tab");
+                btn.innerHTML = `
+                    <span class="tab-flag">${c.flag}</span>
+                    <span class="tab-name">${c.name}</span>
+                    <span class="tab-badge ${collected === CARDS_PER_COUNTRY ? 'complete' : ''}" id="badge-${idx}">${collected}/${CARDS_PER_COUNTRY}</span>
+                `;
+                frag.appendChild(btn);
+            });
+
+            container.appendChild(frag);
+        }
+
+        function updateTabBadge(index) {
+            const c = countries[index];
+            const missing = countState(c.name, "missing");
+            const collected = CARDS_PER_COUNTRY - missing;
+            const badge = document.getElementById(`badge-${index}`);
+            if (badge) {
+                badge.textContent = `${collected}/${CARDS_PER_COUNTRY}`;
+                badge.classList.toggle("complete", collected === CARDS_PER_COUNTRY);
+            }
+        }
+
+        // Tab click (delegated)
+        document.getElementById("country-tabs").addEventListener("click", (e) => {
+            const btn = e.target.closest(".tab-btn");
+            if (!btn) return;
+            selectCountry(parseInt(btn.dataset.index));
+        });
+
+        // --- Panel ---
+        function renderPanel() {
+            const c = countries[activeIndex];
+            const missing = countState(c.name, "missing");
+            const doubles = countState(c.name, "double");
+
+            document.getElementById("panel-title").textContent = `${c.flag} ${c.name}`;
+            document.getElementById("panel-meta").innerHTML =
+                `<span class="meta-missing">${missing} manquante${missing > 1 ? 's' : ''}</span> · <span class="meta-double">${doubles} double${doubles > 1 ? 's' : ''}</span>`;
+            document.getElementById("progress-missing").style.width = `${(missing / CARDS_PER_COUNTRY) * 100}%`;
+            document.getElementById("progress-double").style.width = `${(doubles / CARDS_PER_COUNTRY) * 100}%`;
+
+            // Render cards
+            const grid = document.getElementById("cards-grid");
+            grid.innerHTML = "";
+            const frag = document.createDocumentFragment();
+            for (let i = 1; i <= CARDS_PER_COUNTRY; i++) {
+                const state = getState(c.name, i);
+                const btn = document.createElement("button");
+                btn.className = "card-btn" + (state !== "empty" ? ` ${state}` : "");
+                btn.textContent = i;
+                btn.dataset.num = i;
+                frag.appendChild(btn);
+            }
+            grid.appendChild(frag);
+        }
+
+        function updatePanelStats() {
+            const c = countries[activeIndex];
+            const missing = countState(c.name, "missing");
+            const doubles = countState(c.name, "double");
+            document.getElementById("panel-meta").innerHTML =
+                `<span class="meta-missing">${missing} manquante${missing > 1 ? 's' : ''}</span> · <span class="meta-double">${doubles} double${doubles > 1 ? 's' : ''}</span>`;
+            document.getElementById("progress-missing").style.width = `${(missing / CARDS_PER_COUNTRY) * 100}%`;
+            document.getElementById("progress-double").style.width = `${(doubles / CARDS_PER_COUNTRY) * 100}%`;
+        }
+
+        // Card click (delegated)
+        document.getElementById("cards-grid").addEventListener("click", (e) => {
+            const btn = e.target.closest(".card-btn");
+            if (!btn) return;
+
+            const num = parseInt(btn.dataset.num);
+            const name = countries[activeIndex].name;
+
+            if (!selections[name]) selections[name] = {};
+            const cur = selections[name][num] || "empty";
+            const next = STATES[(STATES.indexOf(cur) + 1) % STATES.length];
+
+            btn.classList.remove("missing", "double");
+            if (next === "empty") {
+                delete selections[name][num];
+                if (Object.keys(selections[name]).length === 0) delete selections[name];
+            } else {
+                selections[name][num] = next;
+                btn.classList.add(next);
+            }
+
+            save();
+            updatePanelStats();
+            updateGlobal();
+            updateTabBadge(activeIndex);
+        });
+
+        // --- Country selection ---
+        function selectCountry(index) {
+            activeIndex = index;
+            // Update tab active state
+            document.querySelectorAll(".tab-btn").forEach(btn => {
+                const i = parseInt(btn.dataset.index);
+                btn.classList.toggle("active", i === index);
+            });
+            renderPanel();
+            // Scroll active tab into view
+            const activeTab = document.querySelector(".tab-btn.active");
+            if (activeTab) activeTab.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+        }
+
+        // --- Search ---
+        const searchInput = document.getElementById("country-search");
+        searchInput.addEventListener("input", () => {
+            const q = searchInput.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            filteredIndices = countries
+                .map((c, i) => ({ c, i }))
+                .filter(({ c }) => c.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q))
+                .map(({ i }) => i);
+            renderTabs();
+            // If current active is not in filtered, select first filtered
+            if (filteredIndices.length > 0 && !filteredIndices.includes(activeIndex)) {
+                selectCountry(filteredIndices[0]);
+            }
+        });
+
+        // --- Keyboard shortcuts ---
+        document.addEventListener("keydown", (e) => {
+            if (document.activeElement === searchInput && e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Escape") return;
+
+            if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+                return;
+            }
+
+            if (e.key === "Escape") {
+                searchInput.value = "";
+                searchInput.blur();
+                filteredIndices = countries.map((_, i) => i);
+                renderTabs();
+                return;
+            }
+
+            if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+                e.preventDefault();
+                const cur = filteredIndices.indexOf(activeIndex);
+                const next = cur + 1 < filteredIndices.length ? filteredIndices[cur + 1] : filteredIndices[0];
+                selectCountry(next);
+            }
+            if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+                e.preventDefault();
+                const cur = filteredIndices.indexOf(activeIndex);
+                const next = cur - 1 >= 0 ? filteredIndices[cur - 1] : filteredIndices[filteredIndices.length - 1];
+                selectCountry(next);
+            }
+        });
+
+        // --- Tabs toggle (mobile) ---
+        const tabsWrapper = document.getElementById("tabs-wrapper");
+        const tabsToggle = document.getElementById("tabs-toggle");
+        tabsToggle.addEventListener("click", () => {
+            tabsWrapper.classList.toggle("expanded");
+            tabsToggle.textContent = tabsWrapper.classList.contains("expanded") ? "\u25B4 Réduire" : "\u25BE Voir tous les pays";
+        });
+
+        // --- Reset ---
+        document.getElementById("btn-reset").addEventListener("click", () => {
+            delete selections[countries[activeIndex].name];
+            save();
+            renderPanel();
+            updateGlobal();
+            updateTabBadge(activeIndex);
+        });
+
+        // --- Init ---
+        function init() {
+            load();
+            document.getElementById("total-possible").textContent = countries.length * CARDS_PER_COUNTRY;
+            renderTabs();
+            renderPanel();
+            updateGlobal();
+        }
+
+        init();
+    </script>
 </body>
 </html>
