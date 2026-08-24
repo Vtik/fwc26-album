@@ -72,6 +72,52 @@ header {
     font-size: 1.05rem;
 }
 
+/* Username bar */
+.username-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.username-bar label {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.username-bar input {
+    padding: 0.4rem 0.75rem;
+    border: none;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    font-family: inherit;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    outline: none;
+    width: 180px;
+    transition: background 0.15s;
+}
+
+.username-bar input::placeholder {
+    color: rgba(255,255,255,0.6);
+}
+
+.username-bar input:focus {
+    background: rgba(255,255,255,0.3);
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
+
+.username-bar input.shake {
+    animation: shake 0.4s;
+    background: rgba(255,100,100,0.3);
+}
+
 /* Global stats */
 .global-stats {
     display: flex;
@@ -303,6 +349,22 @@ header {
     color: #fff;
 }
 
+.tab-group-start {
+    margin-left: 0.75rem;
+    position: relative;
+}
+
+.tab-group-start::before {
+    content: "";
+    position: absolute;
+    left: -0.5rem;
+    top: 20%;
+    height: 60%;
+    width: 2px;
+    background: var(--color-border);
+    border-radius: 1px;
+}
+
 .tab-flag {
     font-size: 1rem;
 }
@@ -455,6 +517,17 @@ header {
 
 .card-btn:active {
     transform: scale(0.95);
+}
+
+/* Disable hover scale on touch devices */
+@media (hover: none) {
+    .card-btn:hover {
+        transform: none;
+    }
+
+    .card-btn:active {
+        transform: scale(0.92);
+    }
 }
 
 .card-btn.missing {
@@ -751,22 +824,79 @@ header {
     font-style: italic;
 }
 
-@media (max-width: 600px) {
-    .trade-grid {
-        grid-template-columns: 1fr;
-    }
+.trade-partner {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    color: var(--color-text-light);
 }
 
-@media (max-width: 480px) {
-    .qr-cards {
-        grid-template-columns: 1fr;
-    }
-
-    .qr-header {
-        flex-direction: column;
-        text-align: center;
-    }
+.trade-partner strong {
+    color: var(--color-text);
 }
+
+/* History section */
+.history-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.history-header {
+    margin-bottom: 1rem;
+}
+
+.history-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    transition: background 0.1s;
+}
+
+.history-item:hover {
+    background: var(--color-primary-light);
+}
+
+.history-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.history-item-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.history-item-date {
+    font-size: 0.75rem;
+    color: var(--color-text-light);
+}
+
+.history-item-actions {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.action-btn--small {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+}
+
 
 /* Footer */
 footer {
@@ -783,25 +913,65 @@ footer p {
 /* Responsive */
 @media (max-width: 768px) {
     header {
-        padding: 2rem 0 2rem;
+        padding: 1.25rem 0;
     }
 
     .site-title {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
+    }
+
+    .site-subtitle {
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    .username-bar {
+        margin-top: 0.75rem;
+    }
+
+    .username-bar input {
+        width: 150px;
+        font-size: 0.8rem;
     }
 
     .global-stats {
-        padding: 1rem 1.25rem;
-        gap: 1rem;
+        margin: -1rem auto 1rem;
+        padding: 0.75rem 1rem;
+        gap: 0.75rem;
     }
 
     .stat-circle {
-        width: 55px;
-        height: 55px;
+        width: 48px;
+        height: 48px;
+    }
+
+    .stat-number {
+        font-size: 1.3rem;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+    }
+
+    .stat-breakdown {
+        font-size: 0.7rem;
+        gap: 0.5rem;
+    }
+
+    .search-bar input {
+        padding: 0.55rem 0.9rem;
+        font-size: 0.85rem;
     }
 
     .cards-grid {
         grid-template-columns: repeat(5, 1fr);
+        gap: 0.4rem;
+    }
+
+    .card-btn {
+        min-height: 44px;
+        font-size: 0.95rem;
+        border-radius: 0.4rem;
     }
 
     .tab-name {
@@ -824,20 +994,83 @@ footer p {
     .tabs-toggle {
         display: block;
     }
-}
 
-@media (max-width: 480px) {
-    .cards-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0.4rem;
+    .panel {
+        padding: 1rem;
     }
 
-    .card-btn {
-        font-size: 0.9rem;
+    .panel-title {
+        font-size: 1.2rem;
     }
 
     .legend {
         gap: 0.75rem;
         font-size: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .qr-section {
+        margin-top: 1.5rem;
+        padding: 1.25rem;
+    }
+
+    .qr-header {
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .qr-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+    }
+
+    .qr-title {
+        font-size: 1.1rem;
+    }
+
+    .qr-card {
+        padding: 1rem 0.75rem;
+    }
+
+    .history-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .container {
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .cards-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.35rem;
+    }
+
+    .card-btn {
+        min-height: 48px;
+        font-size: 1rem;
+    }
+
+    .qr-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .qr-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .global-stats {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .trade-grid {
+        grid-template-columns: 1fr;
     }
 }
