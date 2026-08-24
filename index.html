@@ -205,7 +205,11 @@
             { name: "Angleterre", code: "ENG", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", group: "L" },
             { name: "Croatie", code: "CRO", flag: "\u{1F1ED}\u{1F1F7}", group: "L" },
             { name: "Ghana", code: "GHA", flag: "\u{1F1EC}\u{1F1ED}", group: "L" },
-            { name: "Panama", code: "PAN", flag: "\u{1F1F5}\u{1F1E6}", group: "L" }
+            { name: "Panama", code: "PAN", flag: "\u{1F1F5}\u{1F1E6}", group: "L" },
+            // FWC (FIFA World Cup special - 19 cartes)
+            { name: "FWC", code: "FWC", flag: "\u{1F3C6}", group: "FWC", cardCount: 19 },
+            // CC (Coca-Cola - 12 cartes)
+            { name: "Coca-Cola", code: "CC", flag: "\u{1F964}", group: "CC", cardCount: 12 }
         ];
 
         const CARDS_PER_COUNTRY = 20;
@@ -213,6 +217,15 @@
         const USERNAME_KEY = "panini-username";
         const HISTORY_KEY = "panini-import-history";
         const STATES = ["empty", "missing", "double"];
+
+        // Get card count for a country (some have custom counts)
+        function getCardCount(country) {
+            return country.cardCount || CARDS_PER_COUNTRY;
+        }
+
+        function getTotalPossible() {
+            return countries.reduce((sum, c) => sum + getCardCount(c), 0);
+        }
 
         let activeIndex = 0;
         let selections = {};
@@ -282,8 +295,7 @@
         function updateGlobal() {
             const missing = totalByState("missing");
             const doubles = totalByState("double");
-            const possible = countries.length * CARDS_PER_COUNTRY;
-            // "empty" and "double" = collected. "missing" = not collected.
+            const possible = getTotalPossible();
             const collected = possible - missing;
             const pct = possible > 0 ? Math.round((collected / possible) * 100) : 0;
 
@@ -303,8 +315,9 @@
 
             filteredIndices.forEach(idx => {
                 const c = countries[idx];
+                const cards = getCardCount(c);
                 const missing = countState(c.name, "missing");
-                const collected = CARDS_PER_COUNTRY - missing;
+                const collected = cards - missing;
                 const btn = document.createElement("button");
                 btn.className = "tab-btn" + (idx === activeIndex ? " active" : "");
                 btn.dataset.index = idx;
@@ -312,7 +325,7 @@
                 btn.innerHTML = `
                     <span class="tab-flag">${c.flag}</span>
                     <span class="tab-name">${c.code}</span>
-                    <span class="tab-badge ${collected === CARDS_PER_COUNTRY ? 'complete' : ''}" id="badge-${idx}">${collected}/${CARDS_PER_COUNTRY}</span>
+                    <span class="tab-badge ${collected === cards ? 'complete' : ''}" id="badge-${idx}">${collected}/${cards}</span>
                 `;
                 // Add group separator
                 if (idx > 0 && c.group !== countries[filteredIndices[filteredIndices.indexOf(idx) - 1]]?.group) {
@@ -326,12 +339,13 @@
 
         function updateTabBadge(index) {
             const c = countries[index];
+            const cards = getCardCount(c);
             const missing = countState(c.name, "missing");
-            const collected = CARDS_PER_COUNTRY - missing;
+            const collected = cards - missing;
             const badge = document.getElementById(`badge-${index}`);
             if (badge) {
-                badge.textContent = `${collected}/${CARDS_PER_COUNTRY}`;
-                badge.classList.toggle("complete", collected === CARDS_PER_COUNTRY);
+                badge.textContent = `${collected}/${cards}`;
+                badge.classList.toggle("complete", collected === cards);
             }
         }
 
@@ -345,20 +359,21 @@
         // --- Panel ---
         function renderPanel() {
             const c = countries[activeIndex];
+            const cards = getCardCount(c);
             const missing = countState(c.name, "missing");
             const doubles = countState(c.name, "double");
 
             document.getElementById("panel-title").textContent = `${c.flag} ${c.code} - ${c.name} (Groupe ${c.group})`;
             document.getElementById("panel-meta").innerHTML =
                 `<span class="meta-missing">${missing} manquante${missing > 1 ? 's' : ''}</span> · <span class="meta-double">${doubles} double${doubles > 1 ? 's' : ''}</span>`;
-            document.getElementById("progress-missing").style.width = `${(missing / CARDS_PER_COUNTRY) * 100}%`;
-            document.getElementById("progress-double").style.width = `${(doubles / CARDS_PER_COUNTRY) * 100}%`;
+            document.getElementById("progress-missing").style.width = `${(missing / cards) * 100}%`;
+            document.getElementById("progress-double").style.width = `${(doubles / cards) * 100}%`;
 
             // Render cards
             const grid = document.getElementById("cards-grid");
             grid.innerHTML = "";
             const frag = document.createDocumentFragment();
-            for (let i = 1; i <= CARDS_PER_COUNTRY; i++) {
+            for (let i = 1; i <= cards; i++) {
                 const state = getState(c.name, i);
                 const btn = document.createElement("button");
                 btn.className = "card-btn" + (state !== "empty" ? ` ${state}` : "");
@@ -371,12 +386,13 @@
 
         function updatePanelStats() {
             const c = countries[activeIndex];
+            const cards = getCardCount(c);
             const missing = countState(c.name, "missing");
             const doubles = countState(c.name, "double");
             document.getElementById("panel-meta").innerHTML =
                 `<span class="meta-missing">${missing} manquante${missing > 1 ? 's' : ''}</span> · <span class="meta-double">${doubles} double${doubles > 1 ? 's' : ''}</span>`;
-            document.getElementById("progress-missing").style.width = `${(missing / CARDS_PER_COUNTRY) * 100}%`;
-            document.getElementById("progress-double").style.width = `${(doubles / CARDS_PER_COUNTRY) * 100}%`;
+            document.getElementById("progress-missing").style.width = `${(missing / cards) * 100}%`;
+            document.getElementById("progress-double").style.width = `${(doubles / cards) * 100}%`;
         }
 
         // Card click (delegated)
@@ -503,9 +519,10 @@
             for (let ci = 0; ci < countries.length; ci++) {
                 const name = countries[ci].name;
                 if (!selections[name]) continue;
+                const cards = getCardCount(countries[ci]);
                 const m = [];
                 const d = [];
-                for (let i = 1; i <= CARDS_PER_COUNTRY; i++) {
+                for (let i = 1; i <= cards; i++) {
                     const s = selections[name][i];
                     if (s === "missing") m.push(i);
                     else if (s === "double") d.push(i);
@@ -689,8 +706,9 @@
             for (const c of countries) {
                 const mine = selections[c.name] || {};
                 const theirs = theirSelections[c.name] || {};
+                const cards = getCardCount(c);
 
-                for (let i = 1; i <= CARDS_PER_COUNTRY; i++) {
+                for (let i = 1; i <= cards; i++) {
                     const myState = mine[i] || "empty";
                     const theirState = theirs[i] || "empty";
 
@@ -807,7 +825,7 @@
         function init() {
             load();
             loadUsername();
-            document.getElementById("total-possible").textContent = countries.length * CARDS_PER_COUNTRY;
+            document.getElementById("total-possible").textContent = getTotalPossible();
             renderTabs();
             renderPanel();
             updateGlobal();
