@@ -26,25 +26,3 @@ Suivi de collection de vignettes pour la Coupe du Monde 2026. Marquez vos vignet
 2. Parcourez les equipes et marquez vos vignettes (clic = cycler l'etat)
 3. Exportez votre QR code et partagez-le sur un forum ou par messagerie
 4. Importez le QR d'un autre collectionneur pour voir les echanges possibles
-
-## Deploiement
-
-Le site se deploie automatiquement sur GitHub Pages via le workflow inclus.
-
-```bash
-git remote add origin https://github.com/Vtik/fwc26-album.git
-git push -u origin main
-```
-
-Puis activer Pages dans Settings > Pages > Source : GitHub Actions.
-
-## Tech
-
-- HTML / CSS / JavaScript vanilla
-- [qrcode-generator](https://github.com/nicoschmidt/qrcode-generator) pour la generation QR
-- [jsQR](https://github.com/nicoschmidt/jsQR) pour la lecture QR
-- GitHub Actions pour le deploiement
-
-## Licence
-
-MIT
