@@ -113,6 +113,7 @@
 
                 <div class="qr-display" id="qr-display" hidden>
                     <div id="qr-canvas"></div>
+                    <p class="qr-info" id="qr-info"></p>
                     <button class="action-btn" id="btn-download-qr">&#x2B07; Télécharger l'image</button>
                     <p class="qr-hint">Partagez cette image à un autre collectionneur pour qu'il l'importe.</p>
                 </div>
@@ -621,6 +622,12 @@
                 const encoded = encodeSelections();
                 const canvas = document.getElementById("qr-canvas");
                 canvas.innerHTML = generateQR(encoded);
+
+                // Show date/time and stats
+                const now = new Date().toLocaleString("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+                const missing = totalByState("missing");
+                const doubles = totalByState("double");
+                document.getElementById("qr-info").textContent = `${now} \u2022 ${missing} manquante${missing > 1 ? 's' : ''} \u2022 ${doubles} double${doubles > 1 ? 's' : ''}`;
             }
         });
 
@@ -631,6 +638,11 @@
             const svgEl = document.querySelector("#qr-canvas svg");
             if (!svgEl) return;
             const username = getUsername();
+            const missing = totalByState("missing");
+            const doubles = totalByState("double");
+            const now = new Date().toLocaleString("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+            const statsLine = `${now} \u2022 ${missing} manquante${missing > 1 ? 's' : ''} \u2022 ${doubles} double${doubles > 1 ? 's' : ''}`;
+
             const svgData = new XMLSerializer().serializeToString(svgEl);
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
@@ -643,13 +655,14 @@
                 const fontSize = 14;
                 const userFontSize = 16;
                 const topTextHeight = 30;
-                const bottomTextHeight = 40;
+                const bottomTextHeight = 60;
 
                 ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
                 const urlWidth = ctx.measureText(SITE_URL).width;
+                const statsWidth = ctx.measureText(statsLine).width;
                 ctx.font = `bold ${userFontSize}px system-ui, sans-serif`;
                 const userWidth = ctx.measureText(username).width;
-                const canvasW = Math.max(qrW + padding * 2, urlWidth + padding * 2, userWidth + padding * 2);
+                const canvasW = Math.max(qrW + padding * 2, urlWidth + padding * 2, userWidth + padding * 2, statsWidth + padding * 2);
 
                 canvas.width = canvasW;
                 canvas.height = qrH + padding * 2 + topTextHeight + bottomTextHeight;
@@ -667,13 +680,19 @@
                 // QR code centered
                 ctx.drawImage(img, (canvasW - qrW) / 2, padding + topTextHeight, qrW, qrH);
 
-                // URL text below
+                // Stats line below QR
+                ctx.fillStyle = "#1f2937";
+                ctx.font = `${fontSize}px system-ui, sans-serif`;
+                ctx.fillText(statsLine, canvasW / 2, padding + topTextHeight + qrH + 20);
+
+                // URL text at bottom
                 ctx.fillStyle = "#6b7280";
                 ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
-                ctx.fillText(SITE_URL, canvasW / 2, padding + topTextHeight + qrH + bottomTextHeight - 8);
+                ctx.fillText(SITE_URL, canvasW / 2, padding + topTextHeight + qrH + bottomTextHeight - 4);
 
+                const dateStr = new Date().toLocaleString("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).replace(/[\/: ]/g, "-");
                 const link = document.createElement("a");
-                link.download = `fwc26-${username}.png`;
+                link.download = `fwc26-${username}-${dateStr}.png`;
                 link.href = canvas.toDataURL("image/png");
                 link.click();
             };

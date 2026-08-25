@@ -694,6 +694,13 @@ header {
     color: var(--color-text-light);
 }
 
+.qr-info {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
 .qr-result {
     margin-top: 1.5rem;
     padding: 1.5rem;
