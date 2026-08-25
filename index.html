@@ -550,9 +550,10 @@
             if (username) parts.push("@" + username);
 
             for (let ci = 0; ci < countries.length; ci++) {
-                const name = countries[ci].name;
+                const c = countries[ci];
+                const name = c.name;
                 if (!selections[name]) continue;
-                const cards = getCardCount(countries[ci]);
+                const cards = getCardCount(c);
                 const m = [];
                 const d = [];
                 for (let i = 1; i <= cards; i++) {
@@ -561,7 +562,7 @@
                     else if (s === "double") d.push(i);
                 }
                 if (m.length || d.length) {
-                    let entry = String(ci);
+                    let entry = c.code;
                     if (m.length) entry += "m" + m.join(",");
                     if (d.length) entry += "d" + d.join(",");
                     parts.push(entry);
@@ -574,26 +575,53 @@
             const result = { _username: "", _data: {} };
             if (!encoded) return result;
             const parts = encoded.split(";");
+
+            // Build code-to-name lookup
+            const codeToName = {};
+            for (const c of countries) codeToName[c.code] = c.name;
+
             for (const part of parts) {
                 // Username part
                 if (part.startsWith("@")) {
                     result._username = part.slice(1);
                     continue;
                 }
-                const ciMatch = part.match(/^(\d+)/);
-                if (!ciMatch) continue;
-                const ci = parseInt(ciMatch[1]);
-                if (ci >= countries.length) continue;
-                const name = countries[ci].name;
-                result._data[name] = {};
 
-                const mMatch = part.match(/m([\d,]+)/);
-                const dMatch = part.match(/d([\d,]+)/);
-                if (mMatch) {
-                    for (const n of mMatch[1].split(",")) result._data[name][parseInt(n)] = "missing";
+                // Try code-based format (e.g. FRAm3,7d5)
+                const codeMatch = part.match(/^([A-Z]+)/);
+                if (codeMatch) {
+                    const code = codeMatch[1];
+                    const name = codeToName[code];
+                    if (!name) continue;
+                    result._data[name] = {};
+
+                    const mMatch = part.match(/m([\d,]+)/);
+                    const dMatch = part.match(/d([\d,]+)/);
+                    if (mMatch) {
+                        for (const n of mMatch[1].split(",")) result._data[name][parseInt(n)] = "missing";
+                    }
+                    if (dMatch) {
+                        for (const n of dMatch[1].split(",")) result._data[name][parseInt(n)] = "double";
+                    }
+                    continue;
                 }
-                if (dMatch) {
-                    for (const n of dMatch[1].split(",")) result._data[name][parseInt(n)] = "double";
+
+                // Fallback: legacy index-based format (e.g. 0m3,7d5)
+                const ciMatch = part.match(/^(\d+)/);
+                if (ciMatch) {
+                    const ci = parseInt(ciMatch[1]);
+                    if (ci >= countries.length) continue;
+                    const name = countries[ci].name;
+                    result._data[name] = {};
+
+                    const mMatch = part.match(/m([\d,]+)/);
+                    const dMatch = part.match(/d([\d,]+)/);
+                    if (mMatch) {
+                        for (const n of mMatch[1].split(",")) result._data[name][parseInt(n)] = "missing";
+                    }
+                    if (dMatch) {
+                        for (const n of dMatch[1].split(",")) result._data[name][parseInt(n)] = "double";
+                    }
                 }
             }
             return result;
