@@ -43,9 +43,10 @@
                 </div>
             </div>
 
-            <!-- Search -->
+            <!-- Search + Sort -->
             <div class="search-bar">
                 <input type="text" id="country-search" placeholder="Rechercher un pays... (Ctrl+K)" autocomplete="off" spellcheck="false">
+                <button class="sort-btn" id="btn-sort" title="Changer le tri">A-Z</button>
             </div>
 
             <!-- Country tabs -->
@@ -239,6 +240,7 @@
         let activeIndex = 0;
         let selections = {};
         let filteredIndices = countries.map((_, i) => i);
+        let sortMode = "group"; // "group" or "alpha"
 
         // --- Storage ---
         function load() {
@@ -541,9 +543,10 @@
             if (activeTab) activeTab.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
         }
 
-        // --- Search ---
+        // --- Search & Sort ---
         const searchInput = document.getElementById("country-search");
-        searchInput.addEventListener("input", () => {
+
+        function applyFilterAndSort() {
             const q = searchInput.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             filteredIndices = countries
                 .map((c, i) => ({ c, i }))
@@ -553,10 +556,25 @@
                     return name.includes(q) || code.includes(q);
                 })
                 .map(({ i }) => i);
+
+            if (sortMode === "alpha") {
+                filteredIndices.sort((a, b) => countries[a].code.localeCompare(countries[b].code));
+            }
+
             renderTabs();
             if (filteredIndices.length > 0 && !filteredIndices.includes(activeIndex)) {
                 selectCountry(filteredIndices[0]);
             }
+        }
+
+        searchInput.addEventListener("input", applyFilterAndSort);
+
+        document.getElementById("btn-sort").addEventListener("click", () => {
+            sortMode = sortMode === "group" ? "alpha" : "group";
+            const btn = document.getElementById("btn-sort");
+            btn.textContent = sortMode === "alpha" ? "Grp" : "A-Z";
+            btn.title = sortMode === "alpha" ? "Trier par groupe" : "Trier par ordre alphabétique";
+            applyFilterAndSort();
         });
 
         // --- Keyboard shortcuts ---
