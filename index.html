@@ -864,7 +864,7 @@
                 return;
             }
 
-            // Build table rows: one per country that has data
+            // Build table rows
             const rows = [];
             for (const c of countries) {
                 const data = selections[c.name];
@@ -881,7 +881,7 @@
                     }
                 }
                 if (mCards.length || dCards.length) {
-                    rows.push({ code: c.code, missing: mCards.join(", "), doubles: dCards.join(", ") });
+                    rows.push({ code: c.code, missing: mCards, doubles: dCards });
                 }
             }
 
@@ -889,98 +889,131 @@
             const totalMissing = totalByState("missing");
             const totalDoubles = totalAllDoubleCards();
 
+            // Pre-measure canvas to compute wrapping
+            const measure = document.createElement("canvas").getContext("2d");
+            const padding = 20;
+            const headerH = 56;
+            const fontSize = 13;
+            const lineH = 16;
+            const cellPad = 6;
+            const colCode = 50;
+            const colData = 230;
+            const tableW = colCode + colData * 2;
+            const tableHeaderH = 22;
+
+            measure.font = `${fontSize}px monospace`;
+            const spaceW = measure.measureText(" ").width;
+
+            // Wrap tokens into lines that fit within maxW
+            function wrapTokens(tokens, maxW) {
+                const lines = [];
+                let line = "";
+                let lineW = 0;
+                for (const t of tokens) {
+                    const tW = measure.measureText(t).width;
+                    if (line && lineW + spaceW + tW > maxW) {
+                        lines.push(line);
+                        line = t;
+                        lineW = tW;
+                    } else {
+                        if (line) { line += " "; lineW += spaceW; }
+                        line += t;
+                        lineW += tW;
+                    }
+                }
+                if (line) lines.push(line);
+                return lines.length ? lines : [""];
+            }
+
+            // Pre-compute wrapped lines and row heights
+            const maxDataW = colData - cellPad * 2;
+            const wrappedRows = rows.map(row => {
+                const mLines = wrapTokens(row.missing, maxDataW);
+                const dLines = wrapTokens(row.doubles, maxDataW);
+                const numLines = Math.max(mLines.length, dLines.length);
+                return { code: row.code, mLines, dLines, height: Math.max(numLines * lineH + 6, lineH + 6) };
+            });
+
+            const totalRowsH = wrappedRows.reduce((s, r) => s + r.height, 0);
+            const canvasH = headerH + padding * 2 + tableHeaderH + totalRowsH + 30;
+
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
-
-            const padding = 16;
-            const headerH = 44;
-            const rowH = 14;
-            const fontSize = 9;
-            const colCode = 36;
-            const colMissing = 180;
-            const colDoubles = 180;
-            const tableW = colCode + colMissing + colDoubles;
-            const tableHeaderH = 16;
-
-            const contentH = tableHeaderH + rows.length * rowH + 30;
-            const canvasH = Math.max(headerH + contentH + padding * 2, 200);
-
             canvas.width = tableW + padding * 2;
             canvas.height = canvasH;
 
-            // Background
-            ctx.fillStyle = "#fff";
+            // White background
+            ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Header
-            ctx.fillStyle = "#1f2937";
-            ctx.font = `bold 12px system-ui, sans-serif`;
+            ctx.fillStyle = "#000000";
+            ctx.font = `bold 15px monospace`;
             ctx.textAlign = "left";
-            ctx.fillText(`${username} - FWC 26 Album`, padding, padding + 12);
-            ctx.fillStyle = "#6b7280";
-            ctx.font = `9px system-ui, sans-serif`;
-            ctx.fillText(`${now}  |  ${totalMissing} manquantes  |  ${totalDoubles} doubles`, padding, padding + 24);
+            ctx.fillText(`${username} | FWC 26 Album`, padding, padding + 15);
+            ctx.font = `13px monospace`;
+            ctx.fillText(`${now} | MISSING: ${totalMissing} | DOUBLES: ${totalDoubles}`, padding, padding + 32);
 
             // Table header
             let y = headerH + padding;
-            ctx.fillStyle = "#f1f5f9";
+            ctx.fillStyle = "#000000";
             ctx.fillRect(padding, y, tableW, tableHeaderH);
-            ctx.fillStyle = "#1f2937";
-            ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
-            const textY = y + 11;
-            ctx.fillText("Pays", padding + 4, textY);
-            ctx.fillText("Manquantes", padding + colCode + 4, textY);
-            ctx.fillText("Doubles", padding + colCode + colMissing + 4, textY);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = `bold 13px monospace`;
+            ctx.fillText("PAYS", padding + cellPad, y + 16);
+            ctx.fillText("MANQUANTES", padding + colCode + cellPad, y + 16);
+            ctx.fillText("DOUBLES", padding + colCode + colData + cellPad, y + 16);
 
             // Table rows
             y += tableHeaderH;
-            ctx.font = `${fontSize}px system-ui, monospace`;
-            for (let r = 0; r < rows.length; r++) {
-                const row = rows[r];
-                const ry = y + r * rowH;
-
-                // Alternate row bg
-                if (r % 2 === 1) {
-                    ctx.fillStyle = "#f9fafb";
-                    ctx.fillRect(padding, ry, tableW, rowH);
-                }
-
-                const cellY = ry + 10;
+            ctx.font = `${fontSize}px monospace`;
+            for (const row of wrappedRows) {
+                // Row separator
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(padding + tableW, y);
+                ctx.stroke();
 
                 // Code
-                ctx.fillStyle = "#1f2937";
-                ctx.font = `bold ${fontSize}px system-ui, monospace`;
-                ctx.fillText(row.code, padding + 4, cellY);
+                ctx.fillStyle = "#000000";
+                ctx.font = `bold ${fontSize}px monospace`;
+                ctx.fillText(row.code, padding + cellPad, y + lineH);
 
-                // Missing
-                ctx.fillStyle = "#d97706";
-                ctx.font = `${fontSize}px system-ui, monospace`;
-                ctx.fillText(row.missing, padding + colCode + 4, cellY);
+                // Missing lines
+                ctx.font = `${fontSize}px monospace`;
+                for (let l = 0; l < row.mLines.length; l++) {
+                    ctx.fillText(row.mLines[l], padding + colCode + cellPad, y + lineH + l * lineH);
+                }
 
-                // Doubles
-                ctx.fillStyle = "#15803d";
-                ctx.font = `${fontSize}px system-ui, monospace`;
-                ctx.fillText(row.doubles, padding + colCode + colMissing + 4, cellY);
+                // Doubles lines
+                for (let l = 0; l < row.dLines.length; l++) {
+                    ctx.fillText(row.dLines[l], padding + colCode + colData + cellPad, y + lineH + l * lineH);
+                }
+
+                y += row.height;
             }
 
             // Table border
-            const tableBottom = y + rows.length * rowH;
-            ctx.strokeStyle = "#e2e8f0";
-            ctx.strokeRect(padding, headerH + padding, tableW, tableBottom - headerH - padding);
+            const tableTop = headerH + padding;
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(padding, tableTop, tableW, y - tableTop);
 
             // Vertical lines
             ctx.beginPath();
-            ctx.moveTo(padding + colCode, headerH + padding);
-            ctx.lineTo(padding + colCode, tableBottom);
-            ctx.moveTo(padding + colCode + colMissing, headerH + padding);
-            ctx.lineTo(padding + colCode + colMissing, tableBottom);
+            ctx.moveTo(padding + colCode, tableTop);
+            ctx.lineTo(padding + colCode, y);
+            ctx.moveTo(padding + colCode + colData, tableTop);
+            ctx.lineTo(padding + colCode + colData, y);
             ctx.stroke();
 
-            // Footer URL
-            ctx.fillStyle = "#6b7280";
-            ctx.font = `bold 8px system-ui, sans-serif`;
+            // Footer
+            ctx.fillStyle = "#000000";
+            ctx.font = `11px monospace`;
             ctx.textAlign = "center";
-            ctx.fillText(SITE_URL, canvas.width / 2, canvas.height - 6);
+            ctx.fillText(SITE_URL, canvas.width / 2, canvas.height - 8);
 
             // Download
             const dateStr = new Date().toLocaleString("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).replace(/[\/: ]/g, "-");
