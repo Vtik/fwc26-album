@@ -16,6 +16,9 @@
     --color-double: #16a34a;
     --color-double-light: #dcfce7;
     --color-double-dark: #15803d;
+    --color-awaited: #8b5cf6;
+    --color-awaited-light: #ede9fe;
+    --color-awaited-dark: #7c3aed;
     --color-text: #1f2937;
     --color-text-light: #6b7280;
     --color-bg: #f8fafc;
@@ -481,6 +484,11 @@ header {
     border-color: var(--color-missing-dark);
 }
 
+.legend-swatch--awaited {
+    background: var(--color-awaited);
+    border-color: var(--color-awaited-dark);
+}
+
 .legend-swatch--double {
     background: var(--color-double);
     border-color: var(--color-double-dark);
@@ -569,6 +577,17 @@ header {
 
 .card-btn.missing:hover {
     background: var(--color-missing-dark);
+}
+
+.card-btn.awaited {
+    background: var(--color-awaited);
+    border-color: var(--color-awaited-dark);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
+}
+
+.card-btn.awaited:hover {
+    background: var(--color-awaited-dark);
 }
 
 .card-btn.double {

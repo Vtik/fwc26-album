@@ -72,6 +72,9 @@
                         <span class="legend-swatch legend-swatch--missing"></span>Manquante
                     </div>
                     <div class="legend-item">
+                        <span class="legend-swatch legend-swatch--awaited"></span>Attendue
+                    </div>
+                    <div class="legend-item">
                         <span class="legend-swatch legend-swatch--double"></span>Double
                     </div>
                     <span class="legend-hint">Clic = cycler · Clic droit = retour</span>
@@ -226,7 +229,7 @@
         const STORAGE_KEY = "fwc26-selections";
         const USERNAME_KEY = "fwc26-username";
         const HISTORY_KEY = "fwc26-import-history";
-        const STATES = ["empty", "missing", "double"];
+        const STATES = ["empty", "missing", "awaited", "double"];
 
         // Get card count for a country (some have custom counts)
         function getCardCount(country) {
@@ -277,11 +280,12 @@
         }
 
         // --- Data helpers ---
-        // State format: "missing", number >= 1 (doubles count), or absent = "empty"
+        // State format: "missing", "awaited", number >= 1 (doubles count), or absent = "empty"
         function getState(countryName, num) {
             const val = selections[countryName]?.[num];
             if (!val) return "empty";
             if (val === "missing") return "missing";
+            if (val === "awaited") return "awaited";
             // Legacy "double" string → treat as 1
             if (val === "double") return 1;
             return val; // number
@@ -295,6 +299,7 @@
             if (!selections[countryName]) return 0;
             return Object.values(selections[countryName]).filter(s => {
                 if (state === "missing") return s === "missing";
+                if (state === "awaited") return s === "awaited";
                 if (state === "double") return isDouble(s);
                 return false;
             }).length;
@@ -419,6 +424,8 @@
                 const btn = document.createElement("button");
                 if (state === "missing") {
                     btn.className = "card-btn missing";
+                } else if (state === "awaited") {
+                    btn.className = "card-btn awaited";
                 } else if (isDouble(state)) {
                     btn.className = "card-btn double";
                 } else {
@@ -458,7 +465,7 @@
             if (!selections[name]) selections[name] = {};
             const cur = getState(name, num);
 
-            btn.classList.remove("missing", "double");
+            btn.classList.remove("missing", "awaited", "double");
 
             if (cur === "empty") {
                 // empty → missing
@@ -467,6 +474,11 @@
                 btn.textContent = num;
             } else if (cur === "missing") {
                 // missing → double(1)
+                selections[name][num] = 1;
+                btn.classList.add("double");
+                btn.textContent = num;
+            } else if (cur === "awaited") {
+                // awaited → double(1)
                 selections[name][num] = 1;
                 btn.classList.add("double");
                 btn.textContent = num;
@@ -496,7 +508,7 @@
 
             const cur = getState(name, num);
 
-            btn.classList.remove("missing", "double");
+            btn.classList.remove("missing", "awaited", "double");
 
             if (isDouble(cur)) {
                 const count = typeof cur === "number" ? cur : 1;
@@ -517,7 +529,12 @@
                     btn.textContent = num;
                 }
             } else if (cur === "missing") {
-                // missing → empty
+                // missing → awaited
+                selections[name][num] = "awaited";
+                btn.classList.add("awaited");
+                btn.textContent = num;
+            } else if (cur === "awaited") {
+                // awaited → empty
                 delete selections[name][num];
                 if (Object.keys(selections[name]).length === 0) delete selections[name];
                 btn.textContent = num;
@@ -673,18 +690,21 @@
                 if (!selections[name]) continue;
                 const cards = getCardCount(c);
                 const m = [];
+                const a = [];
                 const d = [];
                 for (let i = 1; i <= cards; i++) {
                     const s = getState(name, i);
                     if (s === "missing") m.push(i);
+                    else if (s === "awaited") a.push(i);
                     else if (isDouble(s)) {
                         const count = typeof s === "number" ? s : 1;
                         d.push(count > 1 ? `${i}:${count}` : String(i));
                     }
                 }
-                if (m.length || d.length) {
+                if (m.length || a.length || d.length) {
                     let entry = c.code;
                     if (m.length) entry += "m" + m.join(",");
+                    if (a.length) entry += "a" + a.join(",");
                     if (d.length) entry += "d" + d.join(",");
                     parts.push(entry);
                 }
@@ -717,9 +737,13 @@
                     result._data[name] = {};
 
                     const mMatch = part.match(/m([\d,]+)/);
+                    const aMatch = part.match(/a([\d,]+)/);
                     const dMatch = part.match(/d([\d,:]+)/);
                     if (mMatch) {
                         for (const n of mMatch[1].split(",")) result._data[name][parseInt(n)] = "missing";
+                    }
+                    if (aMatch) {
+                        for (const n of aMatch[1].split(",")) result._data[name][parseInt(n)] = "awaited";
                     }
                     if (dMatch) {
                         for (const n of dMatch[1].split(",")) {
@@ -739,9 +763,13 @@
                     result._data[name] = {};
 
                     const mMatch = part.match(/m([\d,]+)/);
+                    const aMatch = part.match(/a([\d,]+)/);
                     const dMatch = part.match(/d([\d,:]+)/);
                     if (mMatch) {
                         for (const n of mMatch[1].split(",")) result._data[name][parseInt(n)] = "missing";
+                    }
+                    if (aMatch) {
+                        for (const n of aMatch[1].split(",")) result._data[name][parseInt(n)] = "awaited";
                     }
                     if (dMatch) {
                         for (const n of dMatch[1].split(",")) {
@@ -870,23 +898,26 @@
                 const data = selections[c.name];
                 if (!data) continue;
                 const mCards = [];
+                const aCards = [];
                 const dCards = [];
                 const cards = getCardCount(c);
                 for (let i = 1; i <= cards; i++) {
                     const s = getState(c.name, i);
                     if (s === "missing") mCards.push(String(i));
+                    else if (s === "awaited") aCards.push(String(i));
                     else if (isDouble(s)) {
                         const count = typeof s === "number" ? s : 1;
                         dCards.push(count > 1 ? `${i}(${count})` : String(i));
                     }
                 }
-                if (mCards.length || dCards.length) {
-                    rows.push({ code: c.code, missing: mCards, doubles: dCards });
+                if (mCards.length || aCards.length || dCards.length) {
+                    rows.push({ code: c.code, missing: mCards, awaited: aCards, doubles: dCards });
                 }
             }
 
             const now = new Date().toLocaleString("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
             const totalMissing = totalByState("missing");
+            const totalAwaited = totalByState("awaited");
             const totalDoubles = totalAllDoubleCards();
 
             // Pre-measure canvas to compute wrapping
@@ -897,8 +928,8 @@
             const lineH = 16;
             const cellPad = 6;
             const colCode = 50;
-            const colData = 230;
-            const tableW = colCode + colData * 2;
+            const colData = 200;
+            const tableW = colCode + colData * 3;
             const tableHeaderH = 22;
 
             measure.font = `${fontSize}px monospace`;
@@ -929,9 +960,10 @@
             const maxDataW = colData - cellPad * 2;
             const wrappedRows = rows.map(row => {
                 const mLines = wrapTokens(row.missing, maxDataW);
+                const aLines = wrapTokens(row.awaited, maxDataW);
                 const dLines = wrapTokens(row.doubles, maxDataW);
-                const numLines = Math.max(mLines.length, dLines.length);
-                return { code: row.code, mLines, dLines, height: Math.max(numLines * lineH + 6, lineH + 6) };
+                const numLines = Math.max(mLines.length, aLines.length, dLines.length);
+                return { code: row.code, mLines, aLines, dLines, height: Math.max(numLines * lineH + 6, lineH + 6) };
             });
 
             const totalRowsH = wrappedRows.reduce((s, r) => s + r.height, 0);
@@ -952,7 +984,7 @@
             ctx.textAlign = "left";
             ctx.fillText(`${username} | FWC 26 Album`, padding, padding + 15);
             ctx.font = `13px monospace`;
-            ctx.fillText(`${now} | MISSING: ${totalMissing} | DOUBLES: ${totalDoubles}`, padding, padding + 32);
+            ctx.fillText(`${now} | MISSING: ${totalMissing} | AWAITED: ${totalAwaited} | DOUBLES: ${totalDoubles}`, padding, padding + 32);
 
             // Table header
             let y = headerH + padding;
@@ -962,7 +994,8 @@
             ctx.font = `bold 13px monospace`;
             ctx.fillText("PAYS", padding + cellPad, y + 16);
             ctx.fillText("MANQUANTES", padding + colCode + cellPad, y + 16);
-            ctx.fillText("DOUBLES", padding + colCode + colData + cellPad, y + 16);
+            ctx.fillText("ATTENDUES", padding + colCode + colData + cellPad, y + 16);
+            ctx.fillText("DOUBLES", padding + colCode + colData * 2 + cellPad, y + 16);
 
             // Table rows
             y += tableHeaderH;
@@ -987,9 +1020,14 @@
                     ctx.fillText(row.mLines[l], padding + colCode + cellPad, y + lineH + l * lineH);
                 }
 
+                // Awaited lines
+                for (let l = 0; l < row.aLines.length; l++) {
+                    ctx.fillText(row.aLines[l], padding + colCode + colData + cellPad, y + lineH + l * lineH);
+                }
+
                 // Doubles lines
                 for (let l = 0; l < row.dLines.length; l++) {
-                    ctx.fillText(row.dLines[l], padding + colCode + colData + cellPad, y + lineH + l * lineH);
+                    ctx.fillText(row.dLines[l], padding + colCode + colData * 2 + cellPad, y + lineH + l * lineH);
                 }
 
                 y += row.height;
@@ -1007,6 +1045,8 @@
             ctx.lineTo(padding + colCode, y);
             ctx.moveTo(padding + colCode + colData, tableTop);
             ctx.lineTo(padding + colCode + colData, y);
+            ctx.moveTo(padding + colCode + colData * 2, tableTop);
+            ctx.lineTo(padding + colCode + colData * 2, y);
             ctx.stroke();
 
             // Footer
